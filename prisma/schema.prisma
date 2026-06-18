@@ -1,0 +1,140 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model GoogleAccount {
+  id              String           @id @default(uuid())
+  googleAccountId String           @unique
+  accessToken     String
+  refreshToken    String
+  tokenExpiry     DateTime
+  scopes          String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  youtubeChannels YouTubeChannel[]
+
+  @@map("google_accounts")
+}
+
+model YouTubeChannel {
+  id                 String                  @id @default(uuid())
+  googleAccountId    String
+  googleAccount      GoogleAccount           @relation(fields: [googleAccountId], references: [id], onDelete: Cascade)
+  channelId          String                  @unique
+  channelName        String
+  channelHandle      String
+  thumbnailUrl       String?
+  subscriberCount    Int                     @default(0)
+  totalViews         BigInt                  @default(0)
+  videoCount         Int                     @default(0)
+  isTrackingEnabled  Boolean                 @default(true)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  channelAnalytics   DailyChannelAnalytics[]
+  videoAnalytics     DailyVideoAnalytics[]
+  videos             Video[]
+  recommendations    Recommendation[]
+  syncLogs           SyncLog[]
+
+  @@map("youtube_channels")
+}
+
+model DailyChannelAnalytics {
+  id                      String         @id @default(uuid())
+  channelId               String
+  channel                 YouTubeChannel @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  date                    DateTime
+  views                   Int            @default(0)
+  estimatedRevenue        Float          @default(0.0)
+  subscribersGained       Int            @default(0)
+  subscribersLost         Int            @default(0)
+  netSubscribers          Int            @default(0)
+  estimatedMinutesWatched Float          @default(0.0)
+  watchTimeHours          Float          @default(0.0)
+  averageViewDuration     Float          @default(0.0)
+  impressions             Int            @default(0)
+  ctr                     Float          @default(0.0)
+  rpm                     Float          @default(0.0)
+  cpm                     Float          @default(0.0)
+  createdAt               DateTime       @default(now())
+
+  @@unique([channelId, date])
+  @@map("daily_channel_analytics")
+}
+
+model DailyVideoAnalytics {
+  id                      String         @id @default(uuid())
+  channelId               String
+  channel                 YouTubeChannel @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  videoId                 String
+  date                    DateTime
+  videoTitle              String
+  thumbnailUrl            String?
+  publishedAt             DateTime
+  views                   Int            @default(0)
+  estimatedRevenue        Float          @default(0.0)
+  estimatedMinutesWatched Float          @default(0.0)
+  watchTimeHours          Float          @default(0.0)
+  subscribersGained       Int            @default(0)
+  subscribersLost         Int            @default(0)
+  impressions             Int            @default(0)
+  ctr                     Float          @default(0.0)
+  rpm                     Float          @default(0.0)
+  cpm                     Float          @default(0.0)
+  createdAt               DateTime       @default(now())
+
+  @@unique([channelId, videoId, date])
+  @@map("daily_video_analytics")
+}
+
+model Video {
+  id              String         @id @default(uuid())
+  channelId       String
+  channel         YouTubeChannel @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  videoId         String         @unique
+  title           String
+  description     String?
+  thumbnailUrl    String?
+  publishedAt     DateTime
+  duration        String?
+  categoryId      String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  recommendations Recommendation[]
+
+  @@map("videos")
+}
+
+model Recommendation {
+  id         String          @id @default(uuid())
+  channelId  String?
+  channel    YouTubeChannel? @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  videoId    String?
+  video      Video?          @relation(fields: [videoId], references: [videoId], onDelete: Cascade)
+  type       String          // e.g., "views_growth", "views_drop", "revenue_opportunity", "ctr_warning"
+  title      String
+  message    String
+  priority   String          // "HIGH", "MEDIUM", "LOW"
+  status     String          // "ACTIVE", "DISMISSED", "APPLIED"
+  createdAt  DateTime        @default(now())
+
+  @@map("recommendations")
+}
+
+model SyncLog {
+  id           String          @id @default(uuid())
+  channelId    String?
+  channel      YouTubeChannel? @relation(fields: [channelId], references: [channelId], onDelete: Cascade)
+  syncType     String          // "DAILY", "MANUAL"
+  status       String          // "SUCCESS", "FAILED"
+  startedAt    DateTime        @default(now())
+  finishedAt   DateTime?
+  errorMessage String?
+
+  @@map("sync_logs")
+}
