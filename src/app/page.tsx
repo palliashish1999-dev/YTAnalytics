@@ -38,10 +38,14 @@ export default function LoginPage() {
         <div className="flex-1 flex flex-col justify-center px-8 lg:px-16 py-12 lg:py-0 bg-[#1b0907]/30 animate-[fadeIn_0.6s_ease-out]">
           <div className="max-w-xl mx-auto lg:mx-0">
             {/* Logo */}
-            <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 bg-[#ff5540] rounded-lg flex items-center justify-center shadow-lg shadow-red-500/20">
-                <span className="material-symbols-outlined text-white text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>insights</span>
-              </div>
+            <div className="flex items-center gap-4 mb-12">
+              <img
+                src="/logo.png"
+                alt="YouTube Growth Intelligence Logo"
+                width={120}
+                height={120}
+                className="w-16 h-16 rounded-xl object-contain shadow-lg shadow-red-500/10 border border-red-500/20"
+              />
               <h1 className="font-semibold text-2xl text-[#ffdad4] tracking-tight">YouTube Growth Intelligence</h1>
             </div>
 
